@@ -70,4 +70,39 @@
                         - key: size
                           operators: Exists
 
+- Taints and Tolerations VS Node Affinity
+  - Taints and Tolerations: Pod가 특정 Node에 들어가는 것을 보장해주지는 않고 그저 들어갈 수 있고/없고를 제한할 뿐
+  - Node Affinity: TandT 와 달리 Pod가 특정 Node에 들어가는 것을 보장해줌, 하지만 특정 Node에 특정 Pod이 안들어가게는 제한 못함
+  - 위 2개를 Collaboration 해서 쓸 수 있음
+    - Taints and Tolerations로 Pod가 스케줄되는 것을 막을 수 있고
+    - Node Affinity로 Pod가 스케줄 되는 것을 권장할 수 있음
 
+- Resource Requirements and Limits
+  - 설정파일의 Containers 아래에 resource로 넣을 수 있음
+  - Requests
+    - resource > requests: 아래에 넣으면 되는데 request에 적힌 자원이 있는 Node에 Pod을 스케줄링 할 수 있음
+  - Limits
+    - resource > limits: 아래에 넣으면 됨 container의 resource 사용량을 제한할 수 있음
+    - 만약 제한해둔 메모리를 초과하면 OOM(Out Of Memory) 뜨면서 Pod이 Terminating 됨
+  - Resource Type
+    - CPU
+      - 1 CPU => 1 AWS vCPU, 1 GCP Core, 1 Azure Core, 1 Hyperthread 
+      - 0.1 CPU => 100m
+    - Memory
+      - 1 G, M, K (1 K = 1,000 bytes)
+      - 1 Gi, Mi, Ki (그냥 G보다 좀 더 큼, 1 Ki = 1,024 bytes)
+      - 메모리는 CPU와 달리 알아서 줄어들지 않으므로 kill 해야할 수 있음
+  - Limit Range
+    - kind가 Limit Range로 namespace 레벨에서 적용 가능
+    - 새로 create 될 때만 적용되고, 이미 존재하는 pod에는 적용 X
+    - pod에 일괄 적용
+  - Resource Quota
+    - cluster 내에서 namespace별로 총 resouce 양을 제한
+
+- DaemonSets
+  - 모든 Node에 무조건 특정 Pod이 떠있게 해줌
+  - Node 모니터링할 때 필요
+  - kube proxy도 Daemonset으로 각 Node에 설치된거임
+
+- Static Pods
+  - 

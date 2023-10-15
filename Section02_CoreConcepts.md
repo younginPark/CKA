@@ -53,6 +53,7 @@
   - Kube Proxy는 각 Node에서 실쟁되고 있는 프로세스 (daemonset)
   - iptables rules 같은 방법으로 서비스IP가 내부의 Pod IP와 연결되어 있음 
 
+## Kubernetes Objects
 - Pod
   - container를 감싸는 object
   - 보통 application의 single instance로 one-to-one이지만 Pod 하나에 Multi Containers가 들어가기도 함
@@ -84,6 +85,7 @@
   - ReplicaSet yml 파일과 kind 빼고는 동일
   - Deployment yml을 k create 했을 때 deploymnet가 생기고 거기서 난수가 더해진 replicaset이 생기고 거기서 난수가 또 더해진 pod이 생성됨
   - Deployment를 굳이 써서 얻을 수 있는 이점은 추후에..
+    - Update 지원 (ex. Rolling update, Blue/Green Update ..)
 
 - Services
   - Service를 통해 end-user가 pod에 접근할 수 있게 됨
@@ -130,3 +132,8 @@
       - 설정 변경 후 강제로 object들을 replace 하고 싶을 경우 k replcae --force -f nginx.yaml과 같이 --force 명령어를 사용해 줌
   - Declarative: configuration file에 딱 원하는 결과 (destination)을 적어서 apply command 통해 생성 및 관리
     - 생성 및 수정 후 k apply -f configutation.yaml
+
+- kubectl apply command
+  - local file(yaml) -> last apllied configutaion이 json 타입으로 전환되어 metadata의 annotation field에 last-applied-configuration에 저장 -> Kubernetes 메모리에 저장되어 실행 (live configutation)
+  - local file 수정 후 apply를 다시 하면 변화된 것을 비교 후 변화된 것만 반영되게 됨 
+  - kubernetes 사용할 때 imperative랑 Declarative랑 섞어쓰지 말것, 이렇게 하면 메모리에 저장되었다가 안되었다가 섞임, 이유는 apply만 이렇게 메모리에 저장되고 create, replace는 저장 안됨
