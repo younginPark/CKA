@@ -105,4 +105,37 @@
   - kube proxy도 Daemonset으로 각 Node에 설치된거임
 
 - Static Pods
-  - 
+  - Node만 덩그러니 있을 때 가정으로 kube-api, etcd 등등 모두 없을 때는 Node에서 kubelet이 pod 설정 파일을 읽어서 띄우고 recreate도 함
+  - 대신 kubelet은 Pod 단위 밖에 관리 못하기 때문에 replicaset, service 등은 이용 X
+  - 순서
+    - kubelet.service file에서 pod manifest path 옵션을 확인하고 없으면 넣어줌 (--config=kubeconfig.yaml)
+    - kubeconfig.yaml에서 staticPodPath 설저 있는지 확인하고 없으면 넣어줌 (staticPodPath: /etc/kubernetes/manifest)
+  - static Pods를 쓰면 Kubectl 이 아닌 docker 명령어를 씀 (kubectl도 static Pods이 미러링되어 조회는 가능, 그러나 수정이나 삭제 같은건 못함)
+  - Use Case: control plane이나 etcd 같은걸 각 Node에 Pod 형태로 띄워서 단독으로 관리, 서비스가 충돌할 일 없음 => Master Node
+  - 더 확실하게 이게 static pod인지 확인하는 법은 o yaml 통해서 설정 확인 후에 ownerReferences에 kind랑 name이 Node이고 controlplane인지 확인
+  - 보통 k get pod 했을 때 끝에 nodename이 Pod 이름 끝에 붙어있음
+
+- Multiple Schedulers
+  - kube-system에 기본 kube-scheduler-master 이외에도 custom-scheduler를 만들 수 있음
+  - custom scheduler를 만들 때 scheduler와 scheduler config file을 따로 작성
+  - custom scheduler를 만들어서 pod에 지정하고 싶으면 pod의 containers와 같은 레벨에 scheduleName으로 넣으면 됨
+
+- Configuring Scheduler Profiles
+  - 단계
+    - Scheduling Queue: priority에 맞춰 queue에서 스케줄링 순서가 바뀔 수 있음
+    - Filtering: resource에 따라 할당 가능한 Node 구분
+    - Scoring: Node별로 free space에서 필요한 cpu를 미리 계산해보고 남는게 더 많은 곳에 점수를 많이 줌
+    - Binding: 실제 Node에 바인딩 됨
+  - 각 단계에 Scheduling Plugin 존재 (커스텀 가능)
+    - Scheduling Queue: PrioritySort
+    - Filtering: NodeResourcesFit, NodeName, NodeUnschedulable
+    - Scoring: NodeResourcesFit, ImageLocality
+    - Binding: DefaultBinder
+  - Extension Points (더 있음)
+    - Scheduling Queue: queueSort
+    - Filtering: preFilter, filter, postFilter
+    - Scoring: preScore, Score, reserve
+    - Binding: permit, prebind, bind, postbind
+  
+  - Single Scheduler에 multiple로 Profile 등록 가능
+    - 프로파일 내 여러 스케줄에 각각 플러그인을 설정할 수 있음
